@@ -38,7 +38,8 @@ contract IndistinguishableBloomFilter{
             uint256 hash_ruint=uint256(hash_r);
             uint256 location=hash_ruint%l;
             //decide top or bottom
-            hash_r= sha256( abi.encode(cell_index,keys[i+1]));
+            //hash_r= sha256( abi.encode(cell_index,keys[i+1]));
+            hash_r=sha256(abi.encodePacked(keccak256(abi.encodePacked(hash_r,keys[i+1])),rb));
             hash_ruint=uint256(hash_r);
             uint256 location_level=hash_ruint%2;
             if(location_level==0){
@@ -61,7 +62,7 @@ contract IndistinguishableBloomFilter{
             uint256 hash_ruint=uint256(hash_r);
             uint256 location=hash_ruint%l;
             //judge
-            hash_r= sha256( abi.encode(cell_index,keys[i+1]));
+            hash_r=sha256(abi.encodePacked(keccak256(abi.encodePacked(hash_r,keys[i+1])),rb));
             hash_ruint=uint256(hash_r);
             uint256 location_level=hash_ruint%2;
             
@@ -70,6 +71,25 @@ contract IndistinguishableBloomFilter{
             }
             else{
                 return !top_cells[location]&&bottom_cells[location];
+            }
+        }
+    }
+    
+     function seek(bytes32 cell_index) public returns(bool){
+        for(uint i=0;i<z;i++){
+            bytes32 hash_r= keccak256(abi.encode(cell_index,keys[i]));
+            uint256 hash_ruint=uint256(hash_r);
+            uint256 location=hash_ruint%l;
+            //judge
+            hash_r=sha256(abi.encodePacked(keccak256(abi.encodePacked(hash_r,keys[i+1])),rb));
+            hash_ruint=uint256(hash_r);
+            uint256 location_level=hash_ruint%2;
+            
+            if(location_level==0){
+                return top_cells[location];
+            }
+            else{
+                return bottom_cells[location];
             }
         }
     }
