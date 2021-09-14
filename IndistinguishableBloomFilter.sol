@@ -33,7 +33,8 @@ contract IndistinguishableBloomFilter{
     
     function insert(bytes32 cell_index) public returns(bool){ 
         for(uint i=0;i<z;i++) {//compute location first
-            bytes32 hash_r= keccak256(abi.encodePacked(cell_index,keys[i]));
+            //bytes32 hash_r= keccak256(abi.encodePacked(cell_index,keys[i]));
+            bytes32 hash_r=_hmacsha256(keys[i],cell_index);
             //abi.encodePacked(cell_index,keys[i]);
             uint256 hash_ruint=uint256(hash_r);
             uint256 location=hash_ruint%l;
@@ -58,8 +59,8 @@ contract IndistinguishableBloomFilter{
     
     function search(bytes32 cell_index) public returns(bool){
         for(uint i=0;i<z;i++){
-            bytes32 hash_r= keccak256(abi.encode(cell_index,keys[i]));
-            //hash_r=_hmacsha256(keys[i],cell_index);
+            //bytes32 hash_r= keccak256(abi.encode(cell_index,keys[i]));
+            bytes32 hash_r=_hmacsha256(keys[i],cell_index);
             uint256 hash_ruint=uint256(hash_r);
             uint256 location=hash_ruint%l;
             //judge
@@ -78,8 +79,8 @@ contract IndistinguishableBloomFilter{
     
      function seek(bytes32 cell_index) public returns(bool){
         for(uint i=0;i<z;i++){
-            bytes32 hash_r= keccak256(abi.encode(cell_index,keys[i]));
-            //hash_r=_hmacsha256(keys[i],cell_index);
+            //bytes32 hash_r= keccak256(abi.encode(cell_index,keys[i]));
+            bytes32 hash_r=_hmacsha256(keys[i],cell_index);
             uint256 hash_ruint=uint256(hash_r);
             uint256 location=hash_ruint%l;
             //judge
@@ -96,20 +97,20 @@ contract IndistinguishableBloomFilter{
         }
     }
     
-    function _hmacsha256(bytes memory key, bytes memory message) internal pure returns (bytes32) {
+    function _hmacsha256(bytes32 key, bytes32 message) internal pure returns (bytes32) {
         bytes32 keyl;
         bytes32 keyr;
         uint i;
         if (key.length > 64) {
-            keyl = sha256(key);
+            keyl = sha256(abi.encodePacked(key));
         } else {
             for (i = 0; i < key.length && i < 32; i++)
-                keyl |= bytes32(uint(key[i]) * 2 ** (8 * (31 - i)));
+                keyl |= bytes32(uint(uint8(key[i])) * 2 ** (8 * (31 - i)));
             for (i = 32; i < key.length && i < 64; i++)
-                keyr |= bytes32(uint(key[i]) * 2 ** (8 * (63 - i)));
+                keyr |= bytes32(uint(uint8(key[i])) * 2 ** (8 * (63 - i)));
         }
         bytes32 threesix = 0x3636363636363636363636363636363636363636363636363636363636363636;
         bytes32 fivec = 0x5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
-        return sha256(fivec ^ keyl, fivec ^ keyr, sha256(threesix ^ keyl, threesix ^ keyr, message));
+        return sha256(abi.encodePacked(fivec ^ keyl, fivec ^ keyr, sha256(abi.encodePacked(threesix ^ keyl, threesix ^ keyr, message))));
     }
 }
